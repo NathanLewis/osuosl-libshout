@@ -34,6 +34,7 @@
 
 #include <shout/shout.h>
 #include <common/net/sock.h>
+#include <sys/socket.h>
 #include "common/timing/timing.h"
 #include "common/httpp/httpp.h"
 
@@ -1140,6 +1141,20 @@ retry:
 		} else {
 			if ((self->socket = sock_connect(self->host, port)) < 0)
 				return self->error = SHOUTERR_NOCONNECT;
+			int on = 1;
+			fprintf(stderr,"SETTING KEEP ALIVE got %d\n",
+				setsockopt(self->socket, SOL_SOCKET, SO_KEEPALIVE, &on, sizeof(int))
+			);
+			struct timeval timeout;
+			timeout.tv_sec = 5;
+			timeout.tv_usec = 0;
+			fprintf(stderr,"SETTING SO_RCVTIMEO Got %d\n",
+					setsockopt(self->socket, SOL_SOCKET, SO_RCVTIMEO, (void*)&timeout, sizeof(timeout))
+			);
+			fprintf(stderr,"SETTING SO_SNDTIMEO Got %d\n",
+					setsockopt(self->socket, SOL_SOCKET, SO_SNDTIMEO, (void*)&timeout, sizeof(timeout))
+			);
+
 			self->state = SHOUT_STATE_CONNECT_PENDING;
 		}
 
